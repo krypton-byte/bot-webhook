@@ -1,5 +1,4 @@
-from requests import *
-from googlesearch import *
+from requests import get
 from urllib.parse import *
 from bs4 import BeautifulSoup as bs
 def cari(url):

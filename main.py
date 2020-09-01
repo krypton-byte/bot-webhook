@@ -14,7 +14,7 @@ app = Flask(__name__)
 menu='''
 ↦↦↦↦↦❝Menu❞↦↦↦↦↦
 ↦#cari
-↦#?
+↦#? [bug]
 ↦#wiki
 ↦#intro
 ↦#help
@@ -28,36 +28,30 @@ menu='''
 ↦#nime
 ↦#film
 ↦#ts {TRANSLATE}
-↦#donasi
 ↦↦↦↦↦↦↦↦↦↦↦↦'''
-@app.route('/')
+@app.route('/',methods=['GET','POST'])
 def index():
     poStman=json.loads(request.data.decode())
     chat=poStman['query']['message']
     sender=poStman['query']['sender']
     message=[]
     hasil=reply(chat, sender)
-    for i in hasil:
-        message.append({'message':i})
-    return {
-        'replies':message
-    }
-    
+    if hasil:
+        for i in hasil:
+            print(i)
+            message.append({'message':i})
+        return {
+            'replies':message
+        }
+    else:
+        return 'tested'
 
 def reply(chat, sender):
     outPut=[]
     command=chat.lower().split()[0]
+    print('co : '+command)
     args=chat.split()[1:]
-    if command == '#cari':
-        try:
-            hasil = wikipedia.search(chat[6:])
-            pesan='hasil pencarian : \n'
-            for i in hasil:
-                pesan+='↦ %s\n'%(i)
-            outPut.append(pesan)
-        except:
-            return 'Masukan Parameternya Bro'
-    elif command in ['#help','#menu']:
+    if command in ['#help','#menu']:
         return [menu]
     elif command == '#bct':
         outPut.append(bct(chat[5:]))
@@ -126,57 +120,52 @@ Tanggal : %s
                             answers+='---------------------------%s'%(jb)
                         pesan+=answers
                         outPut.append(pesan)
-                    except:
+                    except Exception as e:
+                        print(e)
                         outPut.append('Gagal Mengambil Jawaban')
             else:
                 outPut.append('Mencari Jawaban ? *%s* Tidak Ada'%(soal))
         else:
             outPut.append('Masukan Soal Nya Bro')
         return outPut
-    elif kpt == '#cari':
+    elif command == '#cari':
+        print('cmd : cari')
         try:
-            hasil = wikipedia.search(chat.replace('#cari',''))
+            hasil = wikipedia.search(chat[6:])
             pesan='hasil pencarian : \n'
+            print(hasil)
             for i in hasil:
                 pesan+='↦ %s\n'%(i)
             outPut.append(pesan)
-        except:
+        except Exception as e:
+            print(e)
             outPut.append('Masukan Parameternya Bro')
         return outPut
-    elif kpt == '#wiki':
+    elif command == '#wiki':
         try:
             hasil=wikipedia.page(chat[6:])
             outPut.append('title :%s\nsource: %s\n%s'%(hasil.title, hasil.url, hasil.content))
         except:
             outPut.append('Yg Anda Cari Tidak Ada')
         return outPut
-    elif kpt == '#cc':
-        cc=json.loads(open('assets/json/ISO-639-1-language.json').read())
+    elif command == '#cc':
+        cc=json.loads(open('ISO-639-1-language.json').read())
         pesan=''
         for i in cc:
             pesan+='%s : %s\n'%(i['code'], i['name'])
         outPut.append(pesan)
         return outPut
-    elif kpt == '#ts':
+    elif command == '#ts':
         try:
             con=tra.translate(text=chat[7:], dest=chat[4:6]).text
             outPut.append(con)
         except:
             outPut.append('#ts [Target] [Text]\nContoh :\n #ts id good morning \nketik #cc untuk melihat kode negara')
         return outPut
-    elif kpt == '#kpt':
-        print(Msg.sender.id)
-        if Msg.sender.id in ['6283172366463@c.us','12363607223@c.us']:
-            try:
-                with stdoutIO() as s:
-                    exec(chat[4:])
-                outPut.append("Hasil Eksekusi : \n%s"%(s.getvalue()))
-            except Exception as e:
-                outPut.append("Error : %s"%(e))
-        else:
-            outPut.append('Hasil Eksekusi :\n%s'%(requests.get('https://twilio-apis.herokuapp.com/',params={'cmd':chat[4:]}).text))
+    elif command == '#kpt':
+        outPut.append('Hasil Eksekusi :\n%s'%(requests.get('https://twilio-apis.herokuapp.com/',params={'cmd':chat[5:]}).text))
         return outPut
-    elif kpt == '#nime':
+    elif command == '#nime':
         hasil=gsearch('"%s" site:dewabatch.com'%chat[5:])
         result=[]
         for i in hasil:
@@ -189,7 +178,7 @@ Tanggal : %s
                 except:
                     outPut.append('Anime "%s" Tidak Ditemukan'%(chat[5:]))
         return outPut
-    elif kpt == '#film':
+    elif command == '#film':
         hasil=gsearch('"%s" site:sdmovie.fun'%chat[5:])
         print(hasil)
         for i in hasil:
@@ -206,7 +195,7 @@ Tanggal : %s
                 print(pesan)
                 outPut.append(hasfun['title']+'\n'+pesan)
         return outPut
-    elif kpt == '#donasi':
+    elif command == '#donasi':
         return ['https://saweria.co/donate/KryptonByte\nYuk Donasi Biar Bot Nya Aktif Terus Dan Mimin Nya Rajin Update & Fix Bug']
     else:
         for i in ['assalamu\'alaikum','asalamu\'alaikum','assalamualaikum','asalamualaikum']:
@@ -215,5 +204,6 @@ Tanggal : %s
         for i in ['nyimak','minyak']:
             if i in chat.lower():
                 outPut.append('Nyimak aja Terooos sampe Kiamat :v')
+        outPut.append('wkwkwk')
         return outPut
-app.run(host='192.168.43.48', port=9898)
+app.run()
